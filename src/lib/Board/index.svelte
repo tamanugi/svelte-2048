@@ -1,6 +1,6 @@
 <script lang="ts">
   import Cell from '$lib/Cell/index.svelte';
-  import { board } from '$lib/game';
+  import { game } from '$lib/game';
   import { flip } from 'svelte/animate';
 
   const size = 4;
@@ -8,18 +8,22 @@
   function handleKeyDown(event: KeyboardEvent) {
     if (movable && event.key.startsWith('Arrow')) {
       movable = false;
-      board.move(event.key);
+      game.move(event.key);
 
-      // 少し遅れて圧縮させる
-      setTimeout(() => {
-        board.merge();
-
-        // さらに遅れてランダム生成
+      if ($game.moved) {
+        // 少し遅れて圧縮させる
         setTimeout(() => {
-          board.genRandom();
-          movable = true;
-        }, 200)
-      }, 100)
+          game.merge();
+
+          // さらに遅れてランダム生成
+          setTimeout(() => {
+            game.genRandom();
+            movable = true;
+          }, 200)
+        }, 100)
+      } else {
+        movable = true;
+      }
     }
   }
 
@@ -28,6 +32,9 @@
       'left: ' + (x * 64 + (x + 1) * 10) + 'px;';
   }
 </script>
+
+score: {$game.score}
+gameover: {$game.gameover}
 
 <svelte:window on:keydown={handleKeyDown} />
 
@@ -40,7 +47,7 @@
   </div>
 
   <div class="cell-container">
-    {#each $board as cell (cell.id)}
+    {#each $game.board as cell (cell.id)}
       <div class="cell-wrapper"
         style="{cellPositionStyle(cell.position)}"
         animate:flip={{duration: 200}}
